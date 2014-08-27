@@ -29,7 +29,7 @@ How to use
 3. Go to "Add product", put your details and in the "General tab" select [CodesWholesale's](http://codeswholesale.com) product to match. This will tell the script what product is buying your customer.
   - At first step choose "Test with text codes only"
 
-4. Create and order at your front:
+4. Create and order at your front page:
  - Add previously added product to cart.
  - Go through checkout process and put your real email (here you will need PayPal configured to sandbox if you don't want to do that choose bank transfer)
  - When your checkout is finished and if you've marked "Automatically complete order when payment is received" in plugin's configuration you should recive an email with keys, otherwise go to admin panel and mark order as "complete" (you will need to do that with bank transfer too)
