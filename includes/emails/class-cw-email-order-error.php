@@ -45,9 +45,7 @@ if (!class_exists('CW_Email_Order_Error')) :
             $this->object = $args['error'];
             $this->title = $args['title'];
             $this->order = $args['order'];
-
-            print_r($args);
-
+            
             $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
         }
 
