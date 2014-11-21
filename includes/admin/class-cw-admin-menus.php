@@ -191,12 +191,12 @@ if (!class_exists('CW_Admin_Menus')) :
             ?>
             <label title="Flat">
                 <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="flat"
-                       class="cw_env_type" <?php if ($args['options'][$args['name']] == "flat") { ?> checked <?php } ?>>
+                       class="" <?php if ($args['options'][$args['name']] == "flat") { ?> checked <?php } ?>>
                 <span>Flat</span>
             </label> <br/> <br />
             <label title="Percent" style="padding-top:10px;">
                 <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="percent"
-                       class="cw_env_type" <?php if ($args['options'][$args['name']] == "percent") { ?> checked <?php } ?>>
+                       class="" <?php if ($args['options'][$args['name']] == "percent") { ?> checked <?php } ?>>
                 <span>Percent</span>
             </label>
         <?php

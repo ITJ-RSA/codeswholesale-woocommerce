@@ -28,7 +28,7 @@ if (!class_exists('CW_Receive_Stock_Price_Update')) :
             if(empty($request)){
                 die( "No request data" );
             }
-            
+
             $product = CW()->get_codes_wholesale_client()->receiveProductAfterStockAndPriceUpdate();
             // $cw_product_id = '6313677f-5219-47e4-a067-7401f55c5a3a'; // $product->getProductId();
             $cw_product_id = $product->getProductId();

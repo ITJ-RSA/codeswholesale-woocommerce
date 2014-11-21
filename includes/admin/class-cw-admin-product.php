@@ -34,7 +34,7 @@ if (!class_exists('CW_Admin_Product')) :
 
             foreach ($prods as $prod) {
                 $options[$prod->getProductId()] = $prod->getName() . " - " .
-                    $prod->getPlatform() . " - €". number_format($prod->getDefaultPrice(), 2, '.', '');
+                    $prod->getPlatform() . " - €". number_format($prod->getLowestPrice(), 2, '.', '');
             }
 
             echo '<div class="options_group">';
