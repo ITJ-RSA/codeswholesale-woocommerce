@@ -23,8 +23,15 @@ if (!class_exists('CW_Receive_Stock_Price_Update')) :
          */
         public function update_price_and_stock()
         {
+            $request = file_get_contents('php://input');
+
+            if(empty($request)){
+                die( "No request data" );
+            }
+            
             $product = CW()->get_codes_wholesale_client()->receiveProductAfterStockAndPriceUpdate();
-            $cw_product_id = '6313677f-5219-47e4-a067-7401f55c5a3a'; // $product->getProductId();
+            // $cw_product_id = '6313677f-5219-47e4-a067-7401f55c5a3a'; // $product->getProductId();
+            $cw_product_id = $product->getProductId();
 
             $args = array(
                 'post_type' => 'product',
@@ -36,7 +43,12 @@ if (!class_exists('CW_Receive_Stock_Price_Update')) :
 
             if ($posts) {
 
-                $product = CodesWholesale\Resource\Product::get($cw_product_id);
+                try {
+                    $product = \CodesWholesale\Resource\Product::get($cw_product_id);
+                } catch (\CodesWholesale\Resource\ResourceError $e) {
+                    die( "Received product id: " . $cw_product_id . " Error: " . $e->getMessage() );
+                }
+
                 $sizeOfStock = $product->getStockQuantity();
                 $price = $product->getLowestPrice();
 
