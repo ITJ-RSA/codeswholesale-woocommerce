@@ -99,7 +99,7 @@ if (!class_exists('CW_SendKeys')) :
 
             if (!$error) {
 
-                $account = CW()->getCodesWholesaleClient()->getAccount();
+                $account = CW()->get_codes_wholesale_client()->getAccount();
 
                 if ($balance_value >= doubleval($account->getCurrentBalance())) {
                     do_action("codeswholesale_balance_to_low", $account);

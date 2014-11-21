@@ -16,7 +16,7 @@ if (!class_exists('CW_Install')) :
         public function __construct()
         {
             register_activation_hook(CW_PLUGIN_FILE, array($this, 'install'));
-            add_action( 'woocommerce_email', array($this, 'unhook_those_pesky_emails' ));
+            add_action('woocommerce_email', array($this, 'unhook_those_pesky_emails'));
         }
 
         /**
@@ -24,6 +24,8 @@ if (!class_exists('CW_Install')) :
          */
         public function install()
         {
+            $this->migrate_to_new_version();
+
             $this->create_options();
         }
 
@@ -45,8 +47,16 @@ if (!class_exists('CW_Install')) :
 
         }
 
-        public function unhook_those_pesky_emails( $email_class) {
+        public function unhook_those_pesky_emails($email_class)
+        {
             remove_action('woocommerce_order_status_completed_notification', array(&$email_class->emails['WC_Email_Customer_Completed_Order'], 'trigger'));
+        }
+
+        /**
+         * This will marge old version with new
+         */
+        private function migrate_to_new_version()
+        {
         }
     }
 

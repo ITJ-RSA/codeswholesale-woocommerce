@@ -9,6 +9,7 @@ if (!class_exists('CW_Admin_Product')) :
      */
     class CW_Admin_Product
     {
+
         /**
          * Hook into product.
          */
@@ -19,12 +20,15 @@ if (!class_exists('CW_Admin_Product')) :
             add_action('woocommerce_process_product_meta', array($this, 'save_custom_fields'));
         }
 
+        /**
+         *
+         */
         public function output_custom_fields()
         {
 
             $options = array();
 
-            $prods = CW()->getCodesWholesaleClient()->getProducts();
+            $prods = CW()->get_codes_wholesale_client()->getProducts();
 
             $options[] = "---- CHOOSE ONE ----";
 
@@ -45,9 +49,7 @@ if (!class_exists('CW_Admin_Product')) :
                 )
             );
 
-
             echo '</div>';
-
         }
 
         /**
@@ -58,6 +60,7 @@ if (!class_exists('CW_Admin_Product')) :
         function save_custom_fields($post_id)
         {
             $woocommerce_select = $_POST[CodesWholesaleConst::PRODUCT_CODESWHOLESALE_ID_PROP_NAME];
+
             if (!empty($woocommerce_select)) {
                 update_post_meta($post_id, CodesWholesaleConst::PRODUCT_CODESWHOLESALE_ID_PROP_NAME, esc_attr($woocommerce_select));
             }

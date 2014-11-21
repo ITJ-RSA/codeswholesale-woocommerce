@@ -38,7 +38,7 @@ if (!class_exists('CW_Update_Stock')) :
                 $products_ids[$cw_product_id] = $product;
             }
 
-            $cw_products = CW()->getCodesWholesaleClient()->getProducts();
+            $cw_products = CW()->get_codes_wholesale_client()->getProducts();
             
             foreach ($cw_products as $cw_product) {
 

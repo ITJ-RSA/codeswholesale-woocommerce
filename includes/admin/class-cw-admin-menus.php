@@ -8,38 +8,339 @@ if (!class_exists('CW_Admin_Menus')) :
      */
     class CW_Admin_Menus
     {
+        /**
+         * @var array
+         */
+        private $admin_options = array(
+
+            'environment' =>
+
+                array(
+                    'label' => 'Environment',
+                    'renderer' => 'render_environment'
+                ),
+
+            'api_client_id' =>
+
+                array(
+                    'label' => 'API Client ID',
+                    'description' => 'Get client id from CodesWholesale platform under "WEB API" tab',
+                    'renderer' => 'render_options_text'
+                ),
+
+            'api_client_secret' =>
+
+                array(
+                    'label' => 'API Client secret',
+                    'description' => 'Get client id from CodesWholesale platform under "WEB API" tab',
+                    'renderer' => 'render_options_text'
+                ),
+
+            'orders_auto_complete' =>
+
+                array(
+                    'label' => 'Complete orders',
+                    'description' => 'Automatically complete order when payment is received',
+                    'renderer' => 'render_orders_checkbox'
+                ),
+
+            'balance_value_notify' =>
+
+                array(
+                    'label' => 'Balance value',
+                    'description' => 'If your balance will reach under this value you will receive an email with warning',
+                    'renderer' => 'render_options_text'
+                ),
+
+            'spread_type' =>
+
+                array(
+                    'label' => 'Spread type',
+                    'description' => 'Select your spread type',
+                    'renderer' => 'render_spread_type'
+                ),
+
+
+            'spread_value' =>
+
+                array(
+                    'label' => 'Spread value',
+                    'description' => 'Spread for each product. Percent if chosen as "Percent", flat value if chosen "Flat". Spread will be calculated based on price from CodesWholesale and added to product price.',
+                    'renderer' => 'render_options_text'
+                ),
+
+        );
 
         /**
          * Hook in tabs.
          */
         public function __construct()
         {
-            // Add menus
-            add_action('admin_menu', array($this, 'admin_menu'), 8);
+            /**
+             * For admin only
+             */
+            if (is_admin()) {
+                // General plugin setup
+                add_action('admin_menu', array($this, 'add_admin_menu'));
+                add_action('admin_init', array($this, 'admin_construct'));
+            }
         }
 
         /**
          * Add menu items
          */
-        public function admin_menu()
+        public function add_admin_menu()
         {
-            add_menu_page('Codes Wholesale', 'Codes Wholesale', 'manage_options', 'codeswholesale', array($this, 'settings_page'), 'dashicons-admin-codeswholesale', 30);
+            add_menu_page('Codes Wholesale', 'Codes Wholesale', 'manage_options', 'codeswholesale', array($this, 'set_up_admin_page'), 'dashicons-admin-codeswholesale', 30);
             // add_submenu_page( 'codeswholesale', 'Check orders', 'Check orders', 'manage_options', 'cw-check-orders', array($this, 'check_orders'));
         }
 
         /**
          *
          */
+        public function admin_construct()
+        {
+            register_setting('cw-settings-group', 'cw_options');
+            add_settings_section('cw-settings-section', 'General settings', array($this, 'section_one_callback'), 'cw_options_page_slug');
+
+            $options = $this->get_options();
+
+            foreach ($this->admin_options as $option_key => $option) {
+
+                add_settings_field($option_key, $option['label'], array($this, $option['renderer']), 'cw_options_page_slug', 'cw-settings-section',
+                    array(
+                        'name' => $option_key,
+                        'options' => $options,
+                    ));
+
+            }
+        }
+
+        /**
+         *
+         */
+        public function section_one_callback()
+        {
+            // section one description
+        }
+
+        /*
+         * Render a text field
+         *
+         * @access public
+         * @param array $args
+         * @return void
+         */
+        public function render_options_text($args = array())
+        {
+            printf(
+                '<input type="text" id="%s" name="cw_options[%s]" value="%s" /><p class="description">%s</p>',
+                $args['name'],
+                $args['name'],
+                $args['options'][$args['name']],
+                $this->admin_options[$args['name']]['description']
+            );
+        }
+
+        /**
+         * @param array $args
+         */
+        public function render_orders_checkbox($args = array())
+        {
+            printf(
+                '<input type="checkbox" id="%s" name="cw_options[%s]" value="1" %s /><p class="description">%s</p>',
+                $args['name'],
+                $args['name'],
+                $args['options'][$args['name']] == 1 ? "checked" : "",
+                $this->admin_options[$args['name']]['description']
+            );
+        }
+
+        /*
+         * Render a text field
+         *
+         * @access public
+         * @param array $args
+         * @return void
+         */
+        public function render_environment($args = array())
+        {
+            ?>
+            <label title="Sandbox">
+                <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="0"
+                       class="cw_env_type" <?php if ($args['options'][$args['name']] == 0) { ?> checked <?php } ?>>
+                <span>Sandbox</span>
+            </label> <br/> <br />
+            <label title="Live" style="padding-top:10px;">
+                <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="1"
+                       class="cw_env_type" <?php if ($args['options'][$args['name']] == 1) { ?> checked <?php } ?>>
+                <span>Live</span>
+            </label>
+            <?php
+        }
+
+        /*
+         * Render spread type
+         *
+         * @access public
+         * @param array $args
+         * @return void
+         */
+        public function render_spread_type($args = array())
+        {
+            ?>
+            <label title="Flat">
+                <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="flat"
+                       class="cw_env_type" <?php if ($args['options'][$args['name']] == "flat") { ?> checked <?php } ?>>
+                <span>Flat</span>
+            </label> <br/> <br />
+            <label title="Percent" style="padding-top:10px;">
+                <input type="radio" name="cw_options[<?php echo $args['name'] ?>]" value="percent"
+                       class="cw_env_type" <?php if ($args['options'][$args['name']] == "percent") { ?> checked <?php } ?>>
+                <span>Percent</span>
+            </label>
+        <?php
+        }
+
+        /**
+         * Set up admin form menu
+         *
+         *
+         *
+         */
+        public function set_up_admin_page()
+        {
+            $account = null;
+            $error = null;
+
+            try {
+                CW()->refresh_codes_wholesale_client();
+                $account = CW()->get_codes_wholesale_client()->getAccount();
+            } catch (Exception $e) {
+                $error = $e;
+            }
+
+            ?>
+            <div class="wrap">
+                <form action="options.php" method="POST">
+                    <div id="poststuff">
+                        <div id="post-body" class="metabox-holder columns-2">
+                            <div id="post-body-content">
+                                <h2>CodesWholesale Options</h2>
+                                <?php settings_fields('cw-settings-group'); ?>
+                                <?php do_settings_sections('cw_options_page_slug'); ?>
+                                <?php submit_button(); ?>
+                            </div>
+
+                            <div id="postbox-container-1" class="postbox-container">
+
+                                <div id="woocommerce_dashboard_status" class="postbox ">
+
+                                    <div class="handlediv" title="Click to toggle"><br></div>
+                                    <h3 class="hndle"><span>Integration status</span></h3>
+
+                                    <div class="inside">
+                                        <ul>
+
+                                            <?php if ($error) : ?>
+
+                                                <li class="updated">
+                                                    <p><strong>Connection failed.</strong></p>
+                                                </li>
+
+                                                <li>
+                                                    <b>Error:</b> <?php echo $error->getMessage(); ?>
+                                                </li>
+
+                                            <?php endif; ?>
+
+                                            <?php if ($account) : ?>
+
+                                                <li class="updated">
+                                                    <p><strong>Successfully connected.</strong></p>
+                                                </li>
+                                                <li>
+                                                    <?php echo $account->getFullName(); ?>
+                                                </li>
+                                                <li>
+                                                    <?php echo $account->getEmail(); ?>
+                                                </li>
+
+                                                <li>
+                                                    <b>Money to use:</b>
+                                                    <?php echo "€" . number_format($account->getTotalToUse(), 2, '.', ''); ?>
+                                                </li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <script type="text/javascript">
+
+                var firstGo = 0;
+
+                jQuery(".cw_env_type").change(function (val) {
+
+                    var envType = jQuery(".cw_env_type:checked").val();
+
+                    if (envType == 0) {
+
+                        jQuery(".form-table tr:eq(1)").hide();
+                        jQuery(".form-table tr:eq(1) input").val('<?php echo CW_Install::$default_client_id; ?>');
+                        jQuery(".form-table tr:eq(2)").hide();
+                        jQuery(".form-table tr:eq(2) input").val('<?php echo CW_Install::$default_client_secret; ?>');
+
+                    } else {
+
+                        jQuery(".form-table tr:eq(1)").show();
+                        jQuery(".form-table tr:eq(2)").show();
+
+                        if(firstGo > 1){
+                            jQuery(".form-table tr:eq(1) input").val('');
+                            jQuery(".form-table tr:eq(2) input").val('');
+                        }
+
+                    }
+
+                    firstGo++;
+                });
+
+                jQuery(".cw_env_type").change();
+
+            </script>
+        <?php
+        }
+
+        /*
+         * Get plugin options set by user
+         *
+         * @access public
+         * @return array
+         */
+        public function get_options()
+        {
+            return CW()->instance()->get_options();
+        }
+
+
+        /**
+         *
+         */
         public function check_orders()
         {
-            $term =  get_term_by( 'slug', 'completed', 'shop_order_status' );
+            $term = get_term_by('slug', 'completed', 'shop_order_status');
 
             $customer_orders = get_posts(array(
 
                 'post_type' => 'shop_order',
 
-                'meta_key'    => '_codeswholesale_filled',
-                'meta_value'  => 1,
+                'meta_key' => '_codeswholesale_filled',
+                'meta_value' => 1,
 
                 'tax_query' => array(
                     array(
@@ -52,289 +353,18 @@ if (!class_exists('CW_Admin_Menus')) :
 
             ));
 
-            foreach($customer_orders as $k => $v)
-            {
-                $order = new WC_Order( $customer_orders[ $k ]->ID );
+            foreach ($customer_orders as $k => $v) {
+                $order = new WC_Order($customer_orders[$k]->ID);
 
                 $a = new CW_SendKeys();
-                $a->send_keys_for_order($customer_orders[ $k ]->ID);
+                $a->send_keys_for_order($customer_orders[$k]->ID);
 
                 echo $order->order_id;
-                echo 'Order by '.$order->billing_first_name.' '.$order->billing_last_name . "<br />";
-                echo $order->needs_payment(). "<br />";
+                echo 'Order by ' . $order->billing_first_name . ' ' . $order->billing_last_name . "<br />";
+                echo $order->needs_payment() . "<br />";
             }
         }
 
-        /**
-         * Init the settings page
-         */
-        public function settings_page()
-        {
-
-            include("class-cw-admin-settings-vo.php");
-
-            if (isset($_POST["cw_env_type"])) {
-                $this->updateSettings();
-            }
-
-            if(isset($_POST['cw_complete_order'])) {
-                update_option(CodesWholesaleConst::AUTOMATICALLY_COMPLETE_ORDER_OPTION_NAME, $_POST['cw_complete_order']);
-            }
-
-            if(isset($_POST['cw_balance_value'])) {
-                update_option(CodesWholesaleConst::NOTIFY_LOW_BALANCE_VALUE_OPTION_NAME, $_POST['cw_balance_value']);
-            }
-
-            $account = null;
-            $error = null;
-
-            try{
-                CW()->refreshCodesWholesaleClient();
-                $account = CW()->getCodesWholesaleClient()->getAccount();
-            } catch(Exception $e) {
-                $error = $e;
-            }
-
-            $balance_value = get_option(CodesWholesaleConst::NOTIFY_LOW_BALANCE_VALUE_OPTION_NAME);
-            $auto_order_complete = get_option(CodesWholesaleConst::AUTOMATICALLY_COMPLETE_ORDER_OPTION_NAME);
-            $settings = CW_Settings_Vo::fromOption(get_option(CodesWholesaleConst::SETTINGS_CODESWHOLESALE_PARAMS_NAME));
-
-            ?>
-
-            <div class="wrap">
-                <h2>CodesWholesale Settings</h2>
-
-                <form method="post">
-
-                    <div id="poststuff">
-
-                        <div id="post-body" class="metabox-holder columns-2">
-                            <div id="post-body-content">
-
-                                <table class="form-table">
-
-                                    <tr>
-                                        <th scope="row"><label for="cw_env_type">Use environment:</label></th>
-                                        <td>
-
-                                            <fieldset>
-
-                                                <legend class="screen-reader-text"><span>Use environment</span></legend>
-
-                                                <label title="Sandbox">
-                                                    <input type="radio" name="cw_env_type" value="0" class="cw_env_type"
-                                                           <?php if ($settings->getClientEndpoint() == CodesWholesale\CodesWholesale::SANDBOX_ENDPOINT) : ?>checked<?php endif; ?> />
-                                                    <span>Sandbox</span>
-                                                </label><br/>
-
-                                                <label title="Live">
-                                                    <input type="radio" name="cw_env_type" value="1" class="cw_env_type"
-                                                           <?php if ($settings->getClientEndpoint() == CodesWholesale\CodesWholesale::LIVE_ENDPOINT) : ?>checked<?php endif; ?> />
-                                                    <span>Live</span>
-                                                </label>
-
-                                            </fieldset>
-
-                                        </td>
-                                    </tr>
-
-                                    <tr class="cw-settings-client">
-                                        <th scope="row"><label for="cw_client_id">API Client id:</label></th>
-                                        <td>
-                                            <input name="cw_client_id" type="text" id="cw_client_id"
-                                                   value="<?php echo $settings->getClientId(); ?>"
-                                                   class="regular-text"/>
-
-                                            <p class="description">
-                                                Get client id from <a href="https://app.codeswholesale.com"
-                                                                      target="_blank">CodesWholesale</a>
-                                                platform under "Web Api" tab.
-                                            </p>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="cw-settings-client">
-                                        <th scope="row"><label for="cw_client_secret">API Client secret:</label></th>
-                                        <td>
-                                            <input name="cw_client_secret" type="text" id="cw_client_secret"
-                                                   value="<?php echo $settings->getClientSecret(); ?>"
-                                                   class="regular-text"/>
-
-                                            <p class="description">
-                                                Get client secret from <a href="https://app.codeswholesale.com"
-                                                                          target="_blank">CodesWholesale</a>
-                                                platform under "Web Api" tab.
-                                            </p>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th scope="row">Orders</th>
-                                        <td>
-                                            <fieldset>
-                                                <legend class="screen-reader-text"><span>Automatically complete order when payment is received</span></legend>
-                                                <label for="cw_complete_order">
-                                                    <input name="cw_complete_order"
-                                                           type="checkbox"
-                                                           id="cw_complete_order"
-                                                           value="1"
-                                                           <?php if ($auto_order_complete == 1) : ?>checked<?php endif; ?> />
-                                                    Automatically complete order when payment is received
-                                                </label>
-                                            </fieldset>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th scope="row"><label for="cw_balance_value">Balance value</label></th>
-                                        <td>
-                                            <input name="cw_balance_value" type="text" id="cw_balance_value"
-                                                   value="<?php echo $balance_value; ?>"
-                                                   class="regular-text"/>
-
-                                            <p class="description">
-                                                If your balance will reach under this value you will receive an email with warning.
-                                            </p>
-                                        </td>
-                                    </tr>
-
-                                </table>
-
-
-                                <p class="submit">
-                                    <input type="submit" name="submit" id="submit" class="button button-primary"
-                                           value="Save Changes">
-                                </p>
-
-                            </div>
-
-                            <div id="postbox-container-1" class="postbox-container">
-
-                                <div id="woocommerce_dashboard_status" class="postbox ">
-
-                                    <div class="handlediv" title="Click to toggle"><br></div><h3 class="hndle"><span>Integration status</span></h3>
-                                    <div class="inside">
-                                        <ul>
-
-                                            <?php if($error) : ?>
-
-                                                <li class="updated">
-                                                    <p><strong>Connection failed.</strong></p>
-                                                </li>
-
-                                                <li>
-                                                    <b>Error:</b> <?php echo $error->getMessage(); ?>
-                                                </li>
-
-                                            <?php endif; ?>
-
-                                            <?php if($account) : ?>
-
-                                                <li class="updated">
-                                                        <p><strong>Successfully connected.</strong></p>
-                                                </li>
-                                                <li>
-                                                    <?php  echo $account->getFullName(); ?>
-                                                </li>
-                                                <li>
-                                                    <?php  echo $account->getEmail(); ?>
-                                                </li>
-
-                                                <li>
-                                                    <b>Money to use:</b> 
-                                                    <?php echo "€". number_format($account->getTotalToUse(), 2, '.', ''); ?>
-                                                </li>
-                                            <?php endif; ?>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </form>
-
-                <script type="text/javascript">
-
-                    jQuery(".cw_env_type").change(function (val) {
-                        var envType = jQuery("input[name='cw_env_type']:checked").val();
-                        if (envType == 0) {
-                            jQuery(".cw-settings-client").hide();
-                            jQuery(".cw-settings-client input").val('');
-                        } else {
-                            jQuery(".cw-settings-client").show();
-                        }
-                    });
-
-                    jQuery(".cw_env_type").change();
-
-                </script>
-
-            </div>
-
-        <?php
-        }
-
-        private function updateSettings()
-        {
-            $settings = new CW_Settings_Vo();
-
-            if (isset($_POST["cw_env_type"])) {
-                $settings->setEnvType($_POST["cw_env_type"]);
-            }
-
-            // change to test endpoints
-            if ($settings->isSandbox()) {
-                $this->resetToSandbox($settings);
-            } // change to live endpoints
-            else if ($settings->isLive()) {
-
-                $error = false;
-
-                if (!isset($_POST['cw_client_id']) || empty($_POST['cw_client_id'])) {
-
-                    $error = true;
-
-                    ?>
-                    <div id="cw-setting-error-invalid_client_id" class="error cw-settings-error">
-                        <p><strong>To go live client id is required.</strong></p>
-                    </div>
-                <?php
-                }
-
-                if (!isset($_POST['cw_client_secret']) || empty($_POST['cw_client_secret'])) {
-
-                    $error = true;
-
-                    ?>
-                    <div id="cw-setting-error-invalid_client_secret" class="error cw-settings-error">
-                        <p><strong>To go live client secret is required.</strong></p>
-                    </div>
-                <?php
-                }
-
-                if (!$error) {
-                    $settings->setClientId($_POST['cw_client_id']);
-                    $settings->setClientSecret($_POST['cw_client_secret']);
-                    $settings->setClientEndpoint(CodesWholesale\CodesWholesale::LIVE_ENDPOINT);
-                } else {
-                    $this->resetToSandbox($settings);
-                }
-            }
-
-            update_option(CodesWholesaleConst::SETTINGS_CODESWHOLESALE_PARAMS_NAME, $settings->toOption());
-        }
-
-        /**
-         * @param $settings
-         */
-        private function resetToSandbox($settings)
-        {
-            $settings->setClientId(CW_Install::$default_client_id);
-            $settings->setClientSecret(CW_Install::$default_client_secret);
-            $settings->setClientEndpoint(CW_Install::$default_env);
-        }
     }
 
 endif;
